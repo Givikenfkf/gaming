@@ -1,0 +1,45 @@
+name: Publish Release for Assets
+
+on:
+  push:
+    branches: dev
+    paths:
+      - 'Minecraft.Assets/**'
+      - '.github/workflows/assets-release.yml'
+  workflow_dispatch:
+
+jobs:
+  assets-release:
+    if: ${{ (github.repository == '4jcraft/4jcraft') || (github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip ninja-build
+          python -m pip install meson
+
+      - name: Configure Meson
+        run: meson setup build_assets --prefix=/ -Dassets_mode=true
+
+      - name: Build the assets
+        run: meson compile -C build_assets -j $(nproc) -v
+
+      - name: Copy/package the final assets
+        run: |
+          meson install -C build_assets --destdir Minecraft.Assets.Complete
+          cd build_assets/Minecraft.Assets.Complete
+          tar cfz ../../Minecraft.Assets.tar.gz *
+
+      - name: Publish a release for the assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Latest Assets Release
+          tag_name: latest-assets
+          target_commitish: ${{ github.sha }}
+          body: This is an assets release for commit ${{ github.sha }}
+          files: Minecraft.Assets.tar.gz
+          fail_on_unmatched_files: true
