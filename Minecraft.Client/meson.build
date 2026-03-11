@@ -52,6 +52,7 @@ client_dependencies = [
     storage_dep,
     assets_localisation_dep,
     world_dep,
+    faudio_dep,
     gl_dep,
     glu_dep,
     thread_dep,
