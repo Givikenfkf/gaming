@@ -750,6 +750,11 @@ Minecraft *pMinecraft=Minecraft::GetInstance();
 app.InitGameSettings();
 
 app.InitialiseTips();
+
+// Set the default sound levels
+pMinecraft->options->set(Options::Option::MUSIC, 1.0f);
+pMinecraft->options->set(Options::Option::SOUND, 1.0f);
+
 while (!RenderManager.ShouldClose()) {
 RenderManager.StartFrame();
 app.UpdateTime();
