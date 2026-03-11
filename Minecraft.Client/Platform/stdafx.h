@@ -302,7 +302,7 @@ typedef XUID GameSessionUID;
 	#include "../Platform/Orbis/Sentient/SentientTelemetryCommon.h"
 	#include "../Platform/Orbis/Sentient/DynamicConfigurations.h"
 	#include "../Platform/Orbis/GameConfig/Minecraft.spa.h"
-	#include "../Platform/Common/Audio/SoundEngine.h"
+	#include "../Platform/Linux/Audio/SoundEngine.h"
 	#include "../Platform/Linux/Linux_UIController.h"
 	#include "../Platform/Linux/Social/SocialManager.h"
 #elif defined __PSVITA__
