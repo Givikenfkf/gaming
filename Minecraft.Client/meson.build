@@ -22,6 +22,7 @@ exclude_platform_common_sources = [
   ' ! -path "*/XUI/*"',
   # we use system zlib instead, since this one is old as hell and isn't configured for linux correctly
   ' ! -path "*/zlib/*"',
+  ' ! -path "*/Audio/SoundEngine*"',
 ]
 
 # all sources in in ./Platform/Common
