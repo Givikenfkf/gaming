@@ -829,6 +829,24 @@ return -1;
 
     app.InitTime();
 
+    // 4J Stu - XACT was creating these automatically, but we need them for QNet. The setup params
+    // are just copied from a sample app and may need changed for our purposes
+    // Start XAudio2
+    HRESULT hr = FAudioCreate( &g_pXAudio2, 0, FAUDIO_DEFAULT_PROCESSOR );
+    if( FAILED( hr ) )
+    {
+        app.DebugPrintf( "Initializing FAudio failed (err = 0x%08x)!\n", hr );
+        app.FatalLoadError();
+    }
+
+    // Create an XAudio2 mastering voice (utilized by XHV2 when voice data is mixed to main speakers)
+    hr = FAudio_CreateMasteringVoice(g_pXAudio2, &g_pXAudio2MasteringVoice, FAUDIO_DEFAULT_CHANNELS, FAUDIO_DEFAULT_SAMPLERATE, 0, 0, NULL);
+    if ( FAILED( hr ) )
+    {
+        app.DebugPrintf( "Creating FAudio mastering voice failed (err = 0x%08x)!\n", hr );
+        app.FatalLoadError();
+    }
+
     // Set the number of possible joypad layouts that the user can switch
     // between, and the number of actions
     InputManager.Initialise(1, 5, MINECRAFT_ACTION_MAX, ACTION_MAX_MENU);
