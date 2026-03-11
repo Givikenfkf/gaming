@@ -28,6 +28,9 @@ public:
 #ifdef _XBOX
     IXACT3WaveBank* m_pStreamedWaveBank;
     IXACT3SoundBank* m_pSoundBank;
+#elif defined(FACT_H)
+	FACTWaveBank* m_pStreamedWaveBank;
+	FACTSoundBank* m_pSoundBank;
 #endif
 protected:
     //@Override

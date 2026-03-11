@@ -62,6 +62,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <FACT.h>
+
 #include "../Platform/Linux/Stubs/LinuxStubs.h"
 #else
 #define AUTO_VAR(_var, _val) auto _var = _val
