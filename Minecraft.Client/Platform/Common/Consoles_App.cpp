@@ -3418,7 +3418,7 @@ void CMinecraftApp::HandleXuiActions(void)
 					{
 						// need to stop the streaming audio - by playing streaming audio from the default texture pack now
 						// reset the streaming sounds back to the normal ones
-#ifndef _XBOX
+#if !defined _XBOX && !defined(FACT_H)
 						pMinecraft->soundEngine->SetStreamingSounds(eStream_Overworld_Calm1,eStream_Overworld_piano3,
 							eStream_Nether1,eStream_Nether4,
 							eStream_end_dragon,eStream_end_end,
