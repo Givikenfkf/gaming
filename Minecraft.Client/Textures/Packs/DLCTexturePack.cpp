@@ -418,7 +418,7 @@ int DLCTexturePack::packMounted(void* pParam, int iPad, std::uint32_t dwErr,
                 }
 
                 // any audio data?
-#ifdef _XBOX
+#if defined(_XBOX) || defined(FACT_H)
                 File audioXSBPath(
                     getFilePath(texturePack->m_dlcInfoPack->GetPackID(),
                                 std::wstring(L"MashUp.xsb")));
