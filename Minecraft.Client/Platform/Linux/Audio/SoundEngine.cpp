@@ -459,10 +459,15 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 
 	bool bSoundbank1=(iSound<=eSoundType_STEP_SAND);
 
-	if( (m_pSoundBank == NULL ) || (m_pSoundBank2 == NULL))return;
+	if( (m_pSoundBank == NULL ) || (m_pSoundBank2 == NULL))
+	{
+		app.DebugPrintf("Sound banks are NULL\n");
+		return;
+	}
 
 	if( currentSounds.size() > MAX_POLYPHONY )
 	{
+		app.DebugPrintf("Size exceeds MAX_POLYPHONY\n");
 		return;
 	}
 	std::wstring name = wchSoundNames[iSound];
@@ -486,9 +491,9 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 #ifdef _DEBUG
 		__debugbreak();
 #endif
+#endif
 		//wprintf(L"WARNING: Sound cue not found - %ls\n", name.c_str() );
 		app.DebugPrintf("Not found: %s\n",xboxName);
-#endif
 		return;
 	}
 
@@ -506,6 +511,7 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 
 	if(iSameSoundC>MAX_SAME_SOUNDS_PLAYING)
 	{
+		app.DebugPrintf("Max same sound count exceeded\n");
 		return;
 	}
 
@@ -518,7 +524,7 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 		if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBank, idx, 0, 0, &cueInstance ) ) )
 		{
 			MemSect(0);
-			//		printf("Sound prep failed\n");
+			app.DebugPrintf("Sound prep failed for index %d in bank 1\n", idx);
 			return;
 		}
 	}
@@ -527,12 +533,14 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 		if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBank2, idx, 0, 0, &cueInstance ) ) )
 		{
 			MemSect(0);
-			//		printf("Sound prep failed\n");
+			app.DebugPrintf("Sound prep failed for index %d in bank 2\n", idx);
 			return;
 		}
 	}
 
 	MemSect(0);
+
+	app.DebugPrintf("Playing sound %d (cue %d) at volume %f in x/y %f/%f\n", iSound, idx, volume, x, y);
 
 	// Register to receive callbacks for cues stopping so we can keep a track of active sounds
 
