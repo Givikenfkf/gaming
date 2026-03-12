@@ -616,6 +616,17 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 	FACTCue_Play(cueInstance);
 }
 
+const char *SoundEngine::ConvertUINameToXboxName(std::wstring& name)
+{
+	if (name == L"press") return "ButtonPress";
+	else if (name == L"focus") return "ButtonFocus";
+	else if (name == L"craft") return "ButtonCraft";
+	else if (name == L"craftfail") return "ButtonCraftFail";
+	else if (name == L"back") return "ButtonBack";
+	else if (name == L"scroll") return "Scroll";
+	else return "";
+}
+
 void SoundEngine::playUI(int iSound, float volume, float pitch)
 {
 	if (m_pSoundBankMenu == NULL) return;
@@ -624,16 +635,16 @@ void SoundEngine::playUI(int iSound, float volume, float pitch)
 	{
 		return;
 	}
+
 	std::wstring name = wchUISoundNames[iSound];
+	const char *xboxName = ConvertUINameToXboxName(name);
 
-	char *cStrName = ConvertSoundPathToName(name);
-
-	uint16_t idx = FACTSoundBank_GetCueIndex(m_pSoundBankMenu, cStrName);
+	uint16_t idx = FACTSoundBank_GetCueIndex(m_pSoundBankMenu, xboxName);
 
 	if( idx == FACTINDEX_INVALID )
 	{
 #ifndef _CONTENT_PACKAGE
-		printf("Not found UI: %s\n", cStrName);
+		printf("Not found UI: %s\n", xboxName);
 #endif
 		return;
 	}
