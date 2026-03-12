@@ -98,5 +98,6 @@ public:
 	int initAudioHardware(int iMinSpeakers)	{ return iMinSpeakers;}
 
 private:
+	static const char *ConvertUINameToXboxName(std::wstring& name);
 	static void XACTNotificationCallback( const FACTNotification* pNotification );
 }; 
