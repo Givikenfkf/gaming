@@ -826,7 +826,7 @@ void SoundEngine::playMusicTick()
 		}
 		else
 		{
-			if( state == FACT_STATE_STOPPED )
+			if( state & FACT_STATE_STOPPED )
 			{
 				// remove the sound and reset the music
 				playStreaming(L"", 0, 0, 0, 0, 0);
