@@ -45,6 +45,14 @@ if host_machine.system() == 'linux' or host_machine.system() == 'emscripten'
   ).stdout().strip().split('\n')
 endif
 
+is_emscripten = host_machine.system() == 'emscripten'
+
+if is_emscripten
+    gl4es_dep = declare_dependency(link_args:[meson.current_source_dir() / 'Platform/Emscripten/gl4es/libGL4ES.a'])
+else
+    gl4es_dep = declare_dependency()
+endif
+
 client_dependencies = [
     render_dep,
     input_dep,
@@ -57,6 +65,7 @@ client_dependencies = [
     thread_dep,
     thread_dep,
     zlib_dep,
+    gl4es_dep,
 ]
 
 if get_option('enable_vsync')
