@@ -35,7 +35,7 @@ platform_sources += run_command(
 ).stdout().strip().split('\n')
 
 # linux-specific files (everything in Platform/Linux)
-if host_machine.system() == 'linux'
+if host_machine.system() == 'linux' or host_machine.system() == 'emscripten'
   platform_sources += run_command(
     'sh', '-c',
     'find "'
@@ -56,7 +56,7 @@ client_dependencies = [
     glu_dep,
     thread_dep,
     thread_dep,
-    dependency('zlib'),
+    zlib_dep,
 ]
 
 if get_option('enable_vsync')
