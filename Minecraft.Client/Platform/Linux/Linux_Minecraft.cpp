@@ -775,6 +775,15 @@ pMinecraft->options->set(Options::Option::SOUND, 1.0f);
 
 while (!RenderManager.ShouldClose()) {
 RenderManager.StartFrame();
+
+if(pMinecraft->soundEngine->isStreamingWavebankReady() &&
+	!pMinecraft->soundEngine->GetIsPlayingStreamingGameMusic() &&
+	!pMinecraft->soundEngine->GetIsPlayingStreamingCDMusic() )
+{
+	// play some music in the menus
+	pMinecraft->soundEngine->playStreaming(L"", 0, 0, 0, 0, 0, false);
+}
+
 app.UpdateTime();
 PIXBeginNamedEvent(0,"Input manager tick");
 InputManager.Tick();
