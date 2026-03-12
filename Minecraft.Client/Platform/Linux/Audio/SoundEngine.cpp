@@ -644,7 +644,7 @@ void SoundEngine::playUI(int iSound, float volume, float pitch)
 	FACTCue *cueInstance;
 	HRESULT hr;
 
-	if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBank, idx, 0, 0, &cueInstance ) ) )
+	if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBankMenu, idx, 0, 0, &cueInstance ) ) )
 	{
 		app.DebugPrintf("UI sound prep failed for index %d\n", idx);
 		return;
