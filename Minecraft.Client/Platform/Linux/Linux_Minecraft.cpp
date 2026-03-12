@@ -928,11 +928,21 @@ return -1;
 
     while (!RenderManager.ShouldClose()) {
         RenderManager.StartFrame();
+
         if (pMinecraft->pollResize()) {
             int fbw, fbh;
             RenderManager.GetFramebufferSize(fbw, fbh);
             ui.setScreenSize(fbw, fbh);
         }
+
+        if (pMinecraft->soundEngine->isStreamingWavebankReady() &&
+	        !pMinecraft->soundEngine->GetIsPlayingStreamingGameMusic() &&
+	        !pMinecraft->soundEngine->GetIsPlayingStreamingCDMusic())
+        {
+	        // play some music in the menus
+	        pMinecraft->soundEngine->playStreaming(L"", 0, 0, 0, 0, 0, false);
+        }
+
         app.UpdateTime();
         PIXBeginNamedEvent(0, "Input manager tick");
         InputManager.Tick();
