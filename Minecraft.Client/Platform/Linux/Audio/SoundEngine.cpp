@@ -18,10 +18,12 @@ FAudioMasteringVoice* g_pXAudio2MasteringVoice = NULL;  // pointer to XAudio2 ma
 FACTAudioEngine *SoundEngine::m_pXACT3Engine = NULL;
 FACTWaveBank	*SoundEngine::m_pWaveBank = NULL;
 FACTWaveBank	*SoundEngine::m_pWaveBank2 = NULL;
+FACTWaveBank	*SoundEngine::m_pWaveBankMenu = NULL;
 FACTWaveBank	*SoundEngine::m_pStreamedWaveBank = NULL;
 FACTWaveBank	*SoundEngine::m_pStreamedWaveBankAdditional = NULL;
 FACTSoundBank	*SoundEngine::m_pSoundBank = NULL;
 FACTSoundBank	*SoundEngine::m_pSoundBank2 = NULL;
+FACTSoundBank	*SoundEngine::m_pSoundBankMenu = NULL;
 CRITICAL_SECTION SoundEngine::m_CS;
 
 F3DAUDIO_HANDLE	 SoundEngine::m_xact3dInstance;
@@ -308,6 +310,49 @@ void SoundEngine::init(Options *pOptions)
 		return;
 	}
 
+	// Load menu wavebank
+	file = CreateFile("Common/Media/Sound/Xbox/MenuSounds.xwb", GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( file == INVALID_HANDLE_VALUE )
+	{
+		app.FatalLoadError();
+		assert(false);
+		return;
+	}
+
+	dwFileSize = GetFileSize(file,NULL);
+	void *pvWaveBankMenu = malloc(dwFileSize);
+	ReadFile(file,pvWaveBankMenu,dwFileSize,&bytesRead,NULL);
+	CloseHandle(file);
+
+	if ( FAILED( hr = FACTAudioEngine_CreateInMemoryWaveBank( m_pXACT3Engine, pvWaveBankMenu, dwFileSize, FACT_FLAG_MANAGEDATA, 0, &m_pWaveBankMenu ) ) )
+	{
+		app.FatalLoadError();
+		assert(false);
+		return;
+	}
+
+	// Load menu soundbank
+	file = CreateFile("Common/Media/Sound/Xbox/MenuSounds.xsb", GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if( file == INVALID_HANDLE_VALUE )
+	{
+		app.FatalLoadError();
+		assert(false);
+		return;
+	}
+
+	dwFileSize = GetFileSize(file,NULL);
+	void *pvSoundBankMenu = malloc(dwFileSize);
+	ReadFile(file,pvSoundBankMenu,dwFileSize,&bytesRead,NULL);
+	CloseHandle(file);
+
+	if ( FAILED( hr = FACTAudioEngine_CreateSoundBank( m_pXACT3Engine, pvSoundBankMenu, dwFileSize, FACT_FLAG_MANAGEDATA, 0, &m_pSoundBankMenu ) ) )
+	{
+		app.FatalLoadError();
+		assert(false);
+		return;
+	}
+
+
     FACTNotificationDescription desc = {0};
 	desc.flags = FACT_FLAG_NOTIFICATION_PERSIST;
 	desc.type = FACTNOTIFICATIONTYPE_WAVEBANKPREPARED;
@@ -571,66 +616,49 @@ void SoundEngine::play(int iSound, float x, float y, float z, float volume, floa
 	FACTCue_Play(cueInstance);
 }
 
-void SoundEngine::playUI(int iSound, float, float)
+void SoundEngine::playUI(int iSound, float volume, float pitch)
 {
-	bool bSoundBank1=(iSound<=eSoundType_STEP_SAND);
-
-	if( (m_pSoundBank == NULL ) || (m_pSoundBank2 == NULL)) return;
+	if (m_pSoundBankMenu == NULL) return;
 
 	if( currentSounds.size() > MAX_POLYPHONY )
 	{
 		return;
 	}
-	std::wstring name = wchSoundNames[iSound];
+	std::wstring name = wchUISoundNames[iSound];
 
-	char *xboxName = (char *)ConvertSoundPathToName(name);
+	char *cStrName = ConvertSoundPathToName(name);
 
-	uint16_t idx = FACTSoundBank_GetCueIndex(m_pSoundBank, xboxName);
+	uint16_t idx = FACTSoundBank_GetCueIndex(m_pSoundBankMenu, cStrName);
 
 	if( idx == FACTINDEX_INVALID )
 	{
-		// check soundbank 2
-		idx = FACTSoundBank_GetCueIndex(m_pSoundBank2, xboxName);
-		if( idx == FACTINDEX_INVALID )
-		{
 #ifndef _CONTENT_PACKAGE
-			printf("Not found UI: %s\n",xboxName);
+		printf("Not found UI: %s\n", cStrName);
 #endif
-			return;
-		}
-		bSoundBank1=false;
+		return;
 	}
 
 	FACTCue *cueInstance;
 	HRESULT hr;
 
-	if(bSoundBank1)
+	if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBank, idx, 0, 0, &cueInstance ) ) )
 	{
-		if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBank, idx, 0, 0, &cueInstance ) ) )
-		{
-			//		printf("Sound prep failed\n");
-			return;
-		}
+		app.DebugPrintf("UI sound prep failed for index %d\n", idx);
+		return;
 	}
-	else
-	{
-		if( FAILED( hr = FACTSoundBank_Prepare(m_pSoundBank2, idx, 0, 0, &cueInstance ) ) )
-		{
-			//		printf("Sound prep failed\n");
-			return;
-		}
-	}
+
+	app.DebugPrintf("Playing UI sound %d (cue %d) at volume %f\n", iSound, idx, volume);
 
 	// Add sound info just so we can detect end of this sound
 	soundInfo *info = new soundInfo();
-	info->eSoundID = (eSOUND_TYPE)0;
-	info->iSoundBank = bSoundBank1?0:1;
+	info->eSoundID = (eSOUND_TYPE)iSound;
+	info->iSoundBank = 0;
 	info->idx =idx;
 	info->x = 0.0f;
 	info->y = 0.0f;
 	info->z = 0.0f;
-	info->volume = 0.0f;
-	info->pitch = 0.0f;
+	info->volume = volume;
+	info->pitch = pitch;
 	info->pCue = cueInstance;
 	info->updatePos = false;
 	EnterCriticalSection(&m_CS);

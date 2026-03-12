@@ -33,10 +33,12 @@ class SoundEngine : public ConsoleSoundEngine
 
 	static FACTWaveBank	    *m_pWaveBank;
 	static FACTWaveBank	    *m_pWaveBank2;
+	static FACTWaveBank	    *m_pWaveBankMenu;
 	static FACTWaveBank	    *m_pStreamedWaveBank;
 	static FACTWaveBank	    *m_pStreamedWaveBankAdditional;
 	static FACTSoundBank	*m_pSoundBank;
 	static FACTSoundBank	*m_pSoundBank2;
+	static FACTSoundBank	*m_pSoundBankMenu;
 
 	static CRITICAL_SECTION		m_CS;
 
