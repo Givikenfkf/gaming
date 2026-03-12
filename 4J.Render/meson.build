@@ -1,11 +1,22 @@
 # isolate em
-_sdl2 = dependency('sdl2')
-_threads = dependency('threads')
+if host_machine.system() != 'emscripten'
+  _sdl2 = dependency('sdl2')
+  _threads = dependency('threads')
+else
+  _sdl2 = declare_dependency()
+  _threads = declare_dependency()
+endif
+
 _glm = dependency('glm')
 _defs = []
 
 if get_option('renderer') == 'gles'
-  _gl = dependency('glesv2', required: true)
+  if host_machine.system() != 'emscripten'
+    _gl = dependency('glesv2', required: true)
+  else
+    _gl = declare_dependency()
+  endif
+
   _defs += ['-DGLES']
 else
   _gl = dependency('gl', required: true)

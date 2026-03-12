@@ -29,6 +29,18 @@ global_cpp_defs = [
   '-DDEBUG',
 ]
 
+if host_machine.system() == 'emscripten'
+  add_project_arguments(
+    '-sUSE_SDL=2',
+    '-sUSE_WEBGL2=1',
+    '-sFULL_ES3=1',
+    '-sUSE_ZLIB=1',
+    '-pthread',
+    '-sPTHREAD_POOL_SIZE=4',
+    language: 'cpp'
+  )
+endif
+
 if host_machine.system() == 'linux'
   global_cpp_defs += ['-Dlinux', '-D__linux', '-D__linux__']
 endif
@@ -46,13 +58,28 @@ global_cpp_args = [
 ]
 add_project_arguments(global_cpp_args, language: 'cpp')
 
-sdl2_dep = dependency('sdl2')
-thread_dep = dependency('threads')
-dl_dep = cc.find_library('dl', required: true)
+# system deps
+if host_machine.system() == 'emscripten'
+    # These are handled in Emscripten via -sUSE_<whatever>
+  sdl2_dep = declare_dependency()
+  zlib_dep = declare_dependency()
+  thread_dep = declare_dependency()
+  dl_dep = declare_dependency()
+else
+  sdl2_dep = dependency('sdl2')
+  zlib_dep = dependency('zlib')
+  thread_dep = dependency('threads')
+  dl_dep = cc.find_library('dl', required: true)
+endif
 
 # GLES vs Desktop GL
 if use_gles
-  gl_dep = dependency('glesv2', required: true)
+  if host_machine.system() != 'emscripten'
+    gl_dep = dependency('glesv2', required: true)
+  else
+    gl_dep = declare_dependency()
+  endif
+
   glu_dep = dependency('', required: false)
 else
   gl_dep = dependency('gl', required: true)
