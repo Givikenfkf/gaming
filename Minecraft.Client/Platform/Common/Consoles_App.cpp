@@ -51,10 +51,16 @@
 #include "../Minecraft.Client/Utils/StringTable.h"
 #include "../Minecraft.Client/Utils/ArchiveFile.h"
 #include "../Minecraft.Client/Minecraft.h"
+
 #if defined(__linux__)
 #include <unistd.h>
 #include <climits>
 #endif
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#include <emscripten/threading.h>
+#endif
+
 #include "UI/UI.h"
 #include "UI/UIScene_PauseMenu.h"
 
@@ -3657,7 +3663,11 @@ void CMinecraftApp::loadMediaArchive() {
 #if _WINDOWS64
     mediapath = L"Common\\Media\\MediaWindows64.arc";
 #elif __linux__
-    mediapath = L"Common/Media/MediaLinux.arc";
+	#if defined(__EMSCRIPTEN__)
+		mediapath = L"/Common/Media/MediaLinux.arc";
+	#else
+        mediapath = L"Common/Media/MediaLinux.arc";
+    #endif
 #endif
 
     if (!mediapath.empty()) {
