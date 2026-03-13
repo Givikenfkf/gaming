@@ -65,6 +65,7 @@ if host_machine.system() == 'emscripten'
     '-sERROR_ON_UNDEFINED_SYMBOLS=0',
     '-sASSERTIONS=0',
     '--use-port=zlib',
+    '--preload-file build/Minecraft.Client/Common@/Common',
     language: 'cpp'
   )
 endif
