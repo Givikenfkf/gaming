@@ -320,8 +320,8 @@ public:
 	void MountNextDLC(int iPad);
 	//static int DLCReadCallback(LPVOID pParam,C4JStorage::DLC_FILE_DETAILS *pDLCData);
 	void HandleDLC(DLCPack *pack);
-	bool DLCInstallPending()	{return m_bDLCInstallPending;}
-	bool DLCInstallProcessCompleted()	{return m_bDLCInstallProcessCompleted;}
+	bool DLCInstallPending()	{return false;}
+	bool DLCInstallProcessCompleted()	{return true;}
 	void ClearDLCInstalled()	{ m_bDLCInstallProcessCompleted=false;}
 	static int MarketplaceCountsCallback(LPVOID pParam,C4JStorage::DLC_TMS_DETAILS *,int iPad);
 
