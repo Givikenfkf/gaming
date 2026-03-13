@@ -236,45 +236,32 @@ typedef struct _JoinMenuInitData
 // More Options
 typedef struct _LaunchMoreOptionsMenuInitData
 {
-	BOOL bOnlineGame;
-	BOOL bInviteOnly;
-	BOOL bAllowFriendsOfFriends;
+	BOOL bOnlineGame = TRUE;
+	BOOL bInviteOnly = FALSE;
+	BOOL bAllowFriendsOfFriends = TRUE;
 
-	BOOL bGenerateOptions;
-	BOOL bStructures;
-	BOOL bFlatWorld;
-	BOOL bBonusChest;
+	BOOL bGenerateOptions = FALSE;
+	BOOL bStructures = FALSE;
+	BOOL bFlatWorld = FALSE;
+	BOOL bBonusChest = FALSE;
 
-	BOOL bPVP;
-	BOOL bTrust;
-	BOOL bFireSpreads;
-	BOOL bTNT;
+	BOOL bPVP = TRUE;
+	BOOL bTrust = FALSE;
+	BOOL bFireSpreads = TRUE;
+	BOOL bTNT = TRUE;
 
-	BOOL bHostPrivileges;
-	BOOL bResetNether;
+	BOOL bHostPrivileges = FALSE;
+	BOOL bResetNether = FALSE;
 
-	BOOL bOnlineSettingChangedBySystem;
+	BOOL bOnlineSettingChangedBySystem = FALSE;
 
-	int iPad;
+	int iPad = -1;
 
-	DWORD dwTexturePack;
+	DWORD dwTexturePack = 0;
 
-	std::wstring seed;
-	int worldSize;
-	bool bDisableSaving;
-
-	_LaunchMoreOptionsMenuInitData()
-	{
-		bOnlineGame = TRUE;
-		bAllowFriendsOfFriends = TRUE;
-		bPVP = TRUE;
-		bFireSpreads = TRUE;
-		bTNT = TRUE;
-		iPad = -1;
-		worldSize = 3;
-		seed = L"";
-		bDisableSaving = false;
-	}
+	std::wstring seed = L"";
+	int worldSize = 3;
+	bool bDisableSaving = false;
 } 
 LaunchMoreOptionsMenuInitData;
 
