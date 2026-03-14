@@ -108,6 +108,13 @@ BufferedImage::BufferedImage(const std::wstring& File,
         } else {
             wDrive = L"Common/";
         }
+#elif defined(__EMSCRIPTEN__)
+	    if (bTitleUpdateTexture) {
+		    // Make the content package point to to the UPDATE: drive is needed
+		    wDrive = L"/Common/res/TitleUpdate/";
+	    } else {
+		    wDrive = L"/Common/";
+	    }
 #else
         if (bTitleUpdateTexture) {
             // Make the content package point to to the UPDATE: drive is needed
