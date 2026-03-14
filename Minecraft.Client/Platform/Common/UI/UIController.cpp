@@ -310,18 +310,28 @@ UIController::EFont UIController::getFontForLanguage(int language) {
 }
 
 UITTFFont* UIController::createFont(EFont fontLanguage) {
+#if defined(__EMSCRIPTEN__)
+	const std::string s_jpPath = "/Common/Media/font/JPN/DFGMaruGothic-Md.ttf";
+	const std::string s_cnPath = "/Common/Media/font/CHT/DFHeiMedium-B5.ttf";
+	const std::string s_koPath = "/Common/Media/font/KOR/BOKMSD.ttf";
+#else
+	const std::string s_jpPath = "Common/Media/font/JPN/DFGMaruGothic-Md.ttf";
+	const std::string s_cnPath = "Common/Media/font/CHT/DFHeiMedium-B5.ttf";
+	const std::string s_koPath = "Common/Media/font/KOR/BOKMSD.ttf";
+#endif
+
     switch (fontLanguage) {
         case eFont_Japanese:
             return new UITTFFont("Mojangles_TTF_jaJP",
-                                 "Common/Media/font/JPN/DFGMaruGothic-Md.ttf",
+                                 s_jpPath,
                                  0x2022);  // JPN
         case eFont_TradChinese:
             return new UITTFFont("Mojangles_TTF_cnTD",
-                                 "Common/Media/font/CHT/DFHeiMedium-B5.ttf",
+                                 s_cnPath,
                                  0x2022);  // CHT
         case eFont_Korean:
             return new UITTFFont("Mojangles_TTF_koKR",
-                                 "Common/Media/font/KOR/BOKMSD.ttf",
+                                 s_koPath,
                                  0x2022);  // KOR
         // 4J-JEV, Cyrillic characters have been added to this font now,
         // (4/July/14) XC_LANGUAGE_RUSSIAN and XC_LANGUAGE_GREEK:
