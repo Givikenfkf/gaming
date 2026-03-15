@@ -11,6 +11,7 @@ on:
       - '**/CMakeLists.txt'
       - 'CMakeLists.txt'
       - '.github/workflows/build-linux.yml'
+      - 'frog.yml'
   pull_request:
     paths:
       - '**.cpp'
