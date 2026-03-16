@@ -30,11 +30,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache meson-1.7
+          sudo apt-get install -y ccache meson-1.7 cmake
           # Set a reasonable ccache size
           ccache -M 5G || true
 

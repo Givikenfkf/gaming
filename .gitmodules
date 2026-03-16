@@ -5,3 +5,6 @@
 [submodule "Minecraft.World/Emscripten/md5"]
 	path = Minecraft.World/Emscripten/md5
 	url = https://github.com/pantsman0/md5
+[submodule "subprojects/gl4es"]
+	path = subprojects/gl4es
+	url = https://github.com/ptitSeb/gl4es.git
