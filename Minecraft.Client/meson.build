@@ -109,6 +109,7 @@ endif
 client = executable(
   'Minecraft.Client',
   client_sources + platform_sources + localisation[1],
+  name_suffix: (host_machine.system() == 'emscripten') ? 'html' : '',
   include_directories: include_directories('Platform', 'Platform/Linux/Iggy/include'),
   dependencies: client_dependencies,
   cpp_args: global_cpp_args
