@@ -47,8 +47,6 @@ endif
 
 is_emscripten = host_machine.system() == 'emscripten'
 
-emcc_link_args = []
-
 if is_emscripten
     cmake = import('cmake')
 
@@ -58,7 +56,6 @@ if is_emscripten
 
     gl4es_proj = cmake.subproject('gl4es', options: gl4es_opt)
     gl4es_dep = gl4es_proj.dependency('GL')
-    emcc_link_args += ['--preload-file', meson.global_source_root() + '/build/Minecraft.Client/Common@Common']
 else
     gl4es_dep = declare_dependency()
 endif
@@ -108,7 +105,6 @@ client = executable('Minecraft.Client',
     '-DUNICODE', '-D_UNICODE',
     '-include', meson.current_source_dir() / 'Platform/stdafx.h',
   ],
-  link_args: emcc_link_args,
 
   c_args   : global_cpp_defs + ['-DUNICODE', '-D_UNICODE'],
   install  : true,
