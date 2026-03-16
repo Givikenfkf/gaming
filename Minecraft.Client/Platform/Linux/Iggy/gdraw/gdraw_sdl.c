@@ -52,6 +52,7 @@ void IggyDiscardVertexBufferCallback(void *owner, void *buf)
 
 // glActiveTexture and glCompressedTexImage2D are core GL 1.3+ on Linux and
 // are declared directly in <GL/gl.h>, so they are omitted from this list.
+#ifndef __EMSCRIPTEN__
 #define GDRAW_GL_EXTENSION_LIST \
 /*  identifier                      import                              procname */ \
 /* GL_ARB_vertex_buffer_object */ \
@@ -103,6 +104,9 @@ GLE(BlitFramebuffer,                "BlitFramebufferEXT",               BLITFRAM
 /* GL_EXT_framebuffer_multisample */ \
 GLE(RenderbufferStorageMultisample, "RenderbufferStorageMultisampleEXT",RENDERBUFFERSTORAGEMULTISAMPLEEXT) \
 /* <end> */
+#else
+#define GDRAW_GL_EXTENSION_LIST
+#endif
 
 #define gdraw_GLx_(id)  gdraw_GL_##id
 #define GDRAW_GLx_(id)  GDRAW_GL_##id
