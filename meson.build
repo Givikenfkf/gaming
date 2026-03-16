@@ -57,7 +57,6 @@ if host_machine.system() == 'emscripten'
   )
 
   add_project_link_arguments(
-    '-sUSE_SDL=2',
     '-sUSE_WEBGL2=1',
     '-sLEGACY_GL_EMULATION=1',
     '-sALLOW_MEMORY_GROWTH=1',
@@ -65,6 +64,7 @@ if host_machine.system() == 'emscripten'
     '-sERROR_ON_UNDEFINED_SYMBOLS=0',
     '-sASSERTIONS=0',
     '--use-port=zlib',
+    '--use-port=sdl2',
     language: 'cpp'
   )
 endif
