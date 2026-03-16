@@ -51,8 +51,14 @@ global_cpp_defs = [
 ]
 
 if host_machine.system() == 'emscripten'
+  common_args = [
+    '--use-port=zlib',
+    '--use-port=sdl2',
+  ]
+
   add_project_arguments(
     '-pthread',
+    common_args,
     language: 'cpp'
   )
 
@@ -63,8 +69,7 @@ if host_machine.system() == 'emscripten'
     '-sPTHREAD_POOL_SIZE=4',
     '-sERROR_ON_UNDEFINED_SYMBOLS=0',
     '-sASSERTIONS=0',
-    '--use-port=zlib',
-    '--use-port=sdl2',
+    common_args,
     language: 'cpp'
   )
 endif
