@@ -51,7 +51,7 @@ if is_emscripten
     cmake = import('cmake')
 
     gl4es_opt = cmake.subproject_options()
-    gl4es_opt.add_cmake_defines({'STATICLIB': true})
+    gl4es_opt.add_cmake_defines({'STATICLIB': true, 'NOX11': true, 'NOEGL': true})
     gl4es_opt.set_override_option('unity', 'off')
 
     gl4es_proj = cmake.subproject('gl4es', options: gl4es_opt)

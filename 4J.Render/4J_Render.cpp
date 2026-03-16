@@ -10,6 +10,10 @@
 #include <cmath>
 #include <pthread.h>
 
+#ifdef __EMSCRIPTEN__
+#include <gl4esinit.h>
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -73,6 +77,10 @@ static void onFramebufferResize(int w, int h) {
 
 // Initialize OpenGL & The SDL window.
 void C4JRender::Initialise() {
+#ifdef __EMSCRIPTEN__
+    initialize_gl4es();
+#endif
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "[4J_Render] Failed to initialise SDL: %s\n",
                 SDL_GetError());
