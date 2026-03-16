@@ -1,0 +1,78 @@
+name: Build (Emscripten)
+
+on:
+  push:
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - '**.c'
+      - '**/meson.build'
+      - 'meson.build'
+      - '**/CMakeLists.txt'
+      - 'CMakeLists.txt'
+      - '.github/workflows/build-emscripten.yml'
+  pull_request:
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - '**.c'
+      - '**/meson.build'
+      - 'meson.build'
+      - '**/CMakeLists.txt'
+      - 'CMakeLists.txt'
+      - '.github/workflows/build-emscripten.yml'
+
+jobs:
+  build-emscripten:
+    runs-on: ubuntu-latest
+    container:
+      image: emscripten/emsdk:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache meson-1.7
+          # Set a reasonable ccache size
+          ccache -M 5G || true
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/meson.build') }}
+
+      - name: Restore meson cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/meson
+          key: ${{ runner.os }}-meson-${{ hashFiles('**/meson.build') }}
+
+      - name: Configure Meson
+        env:
+          CC: "ccache emcc"
+          CXX: "ccache em++"
+          CCACHE_DIR: ${{ runner.temp }}/ccache
+        run: |
+          mkdir -p "$CCACHE_DIR"
+          export CCACHE_DIR="$CCACHE_DIR"
+          meson setup build_emscripten -D enable_java_guis=true -D enable_shiggy=false --wipe --buildtype=debug --cross-file=./scripts/emscripten_native.txt
+
+      - name: Build with Meson
+        env:
+          CC: "ccache emcc"
+          CXX: "ccache em++"
+          CCACHE_DIR: ${{ runner.temp }}/ccache
+        run: |
+          export CCACHE_DIR="${{ runner.temp }}/ccache"
+          # Use all available cores for faster parallel builds
+          meson compile -C build_emscripten -j $(nproc) -v Minecraft.Client
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraft-client-emscripten-debug_exe-${{ github.sha }}
+          path: build_emscripten/Minecraft.Client/Minecraft.Client.js
+          retention-days: 7
