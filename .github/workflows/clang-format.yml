@@ -1,34 +1,7 @@
 name: Clang Format
 
 on:
-  push:
-    paths:
-      - '**.cpp'
-      - '**.h'
-      - '**.c'
-      - '**.cc'
-      - '**.cxx'
-      - '**.hh'
-      - '**.hpp'
-      - '**.hxx'
-      - '**.inl'
-      - '.clang-format'
-      - '.github/workflows/clang-format.yml'
-      - '.github/scripts/check-clang-format.sh'
-  pull_request:
-    paths:
-      - '**.cpp'
-      - '**.h'
-      - '**.c'
-      - '**.cc'
-      - '**.cxx'
-      - '**.hh'
-      - '**.hpp'
-      - '**.hxx'
-      - '**.inl'
-      - '.clang-format'
-      - '.github/workflows/clang-format.yml'
-      - '.github/scripts/check-clang-format.sh'
+  workflow_dispatch:
 
 jobs:
   clang-format:
