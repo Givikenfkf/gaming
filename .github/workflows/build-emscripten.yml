@@ -70,11 +70,14 @@ jobs:
         run: |
           export CCACHE_DIR="${{ runner.temp }}/ccache"
           # Use all available cores for faster parallel builds
-          meson compile -C build_emscripten -j $(nproc) -v Minecraft.Client
+          meson compile -C build_emscripten -j $(nproc) -v Minecraft.Client.html
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: minecraft-client-emscripten-debug_exe-${{ github.sha }}
-          path: build_emscripten/Minecraft.Client/Minecraft.Client.js
+          path: |
+            build_emscripten/Minecraft.Client/Minecraft.Client.html
+            build_emscripten/Minecraft.Client/Minecraft.Client.js
+            build_emscripten/Minecraft.Client/Minecraft.Client.wasm
           retention-days: 7
