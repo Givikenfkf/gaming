@@ -500,7 +500,7 @@ File Minecraft::getWorkingDirectory(const std::wstring& applicationName) {
     std::wstring userHome = convStringToWstring(getenv("HOME"));
     File* workingDirectory;
 #if defined(__linux__)
-    workingDirectory = new File(userHome, L'.' + applicationName + L'/');
+    workingDirectory = new File(userHome, L'.' + applicationName);
 #elif defined(_WINDOWS64)
     std::string applicationData = getenv("APPDATA");
     if (!applicationData.empty()) {
