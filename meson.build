@@ -49,6 +49,7 @@ if host_machine.system() == 'emscripten'
     '-sERROR_ON_UNDEFINED_SYMBOLS=0',
     '-sASSERTIONS=0',
     '-sFORCE_FILESYSTEM=1',
+    '-g',
     common_args,
     language: 'cpp'
   )
