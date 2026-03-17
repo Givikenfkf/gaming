@@ -31,12 +31,12 @@ global_cpp_defs = [
 
 if host_machine.system() == 'emscripten'
   common_args = [
+    '-pthread',
     '--use-port=zlib',
     '--use-port=sdl2',
   ]
 
   add_project_arguments(
-    '-pthread',
     common_args,
     language: 'cpp'
   )
