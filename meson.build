@@ -78,6 +78,7 @@ if is_emscripten
     '-sPTHREAD_POOL_SIZE=4',
     '-sERROR_ON_UNDEFINED_SYMBOLS=0',
     '-sASSERTIONS=0',
+    '-sFORCE_FILESYSTEM=1',
     common_args,
     language: 'cpp'
   )
