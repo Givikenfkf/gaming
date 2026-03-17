@@ -67,10 +67,6 @@
 #ifdef __ORBIS__
 #include <save_data_dialog.h>
 #endif
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include <emscripten/threading.h>
-#endif
 
 #include "Leaderboards/LeaderboardManager.h"
 
@@ -4075,7 +4071,7 @@ void CMinecraftApp::loadMediaArchive()
 
 void CMinecraftApp::loadStringTable()
 {
-#ifndef __EMSCRIPTEN__
+#ifndef _XBOX
 
 	if(m_stringTable!=NULL)
 	{
