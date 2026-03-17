@@ -121,8 +121,12 @@ File::File(const std::wstring& pathname) {
 File::File(const std::wstring& parent,
            const std::wstring& child)  //: m_abstractPathName( child  )
 {
-    m_abstractPathName =
-        pathRoot + pathSeparator + parent + pathSeparator + child;
+    if (pathRoot != L"") {
+        m_abstractPathName =
+            pathRoot + pathSeparator + parent + pathSeparator + child;
+    } else {
+        m_abstractPathName = parent + pathSeparator + child;
+    }
     // this->parent = new File( parent );
 }
 
