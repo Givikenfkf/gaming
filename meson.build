@@ -11,19 +11,29 @@ project('4jcraft-chucklegrounds', ['cpp', 'c'],
   ],
 )
 
+cmake = import('cmake')
 pymod = import('python')
 python = pymod.find_installation('python3', required: true)
 
 cc = meson.get_compiler('cpp')
 
+is_emscripten = host_machine.system() == 'emscripten'
+
 # system deps
-if host_machine.system() == 'emscripten'
-    # These are handled in Emscripten via -sUSE_<whatever>
-    gl_dep  = declare_dependency()
+if is_emscripten
+    # These are handled in Emscripten via -sUSE_<whatever> (except GL4ES)
     glu_dep = declare_dependency()
     sdl2_dep = declare_dependency()
     thread_dep = declare_dependency()
     zlib_dep   = declare_dependency()
+
+    # GL4ES stuff
+    gl4es_opt = cmake.subproject_options()
+    gl4es_opt.add_cmake_defines({'STATICLIB': true, 'NOX11': true, 'NOEGL': true})
+    gl4es_opt.set_override_option('unity', 'off')
+
+    gl4es_proj = cmake.subproject('gl4es', options: gl4es_opt)
+    gl_dep = gl4es_proj.dependency('GL')
 else
     gl_dep  = dependency('gl')
     glu_dep = dependency('glu')
@@ -50,7 +60,7 @@ global_cpp_defs = [
   '-DDEBUG',
 ]
 
-if host_machine.system() == 'emscripten'
+if is_emscripten
   common_args = [
     '--use-port=zlib',
     '--use-port=sdl2',
@@ -74,7 +84,7 @@ if host_machine.system() == 'emscripten'
 endif
 
 # DecalOverdose: yes i know it's bad to do this but I don't know a better way to do this.
-if host_machine.system() == 'linux' or host_machine.system() == 'emscripten'
+if host_machine.system() == 'linux' or is_emscripten
   global_cpp_defs += [
     '-Dlinux',
     '-D__linux',

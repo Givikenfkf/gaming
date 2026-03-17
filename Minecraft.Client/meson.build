@@ -45,21 +45,6 @@ if host_machine.system() == 'linux' or host_machine.system() == 'emscripten'
   ).stdout().strip().split('\n')
 endif
 
-is_emscripten = host_machine.system() == 'emscripten'
-
-if is_emscripten
-    cmake = import('cmake')
-
-    gl4es_opt = cmake.subproject_options()
-    gl4es_opt.add_cmake_defines({'STATICLIB': true, 'NOX11': true, 'NOEGL': true})
-    gl4es_opt.set_override_option('unity', 'off')
-
-    gl4es_proj = cmake.subproject('gl4es', options: gl4es_opt)
-    gl4es_dep = gl4es_proj.dependency('GL')
-else
-    gl4es_dep = declare_dependency()
-endif
-
 client_dependencies = [
     render_dep,
     input_dep,
@@ -72,7 +57,6 @@ client_dependencies = [
     thread_dep,
     thread_dep,
     zlib_dep,
-    gl4es_dep,
 ]
 
 if get_option('enable_vsync')
