@@ -17,6 +17,8 @@ public:
         IggyCustomDrawCallbackRegion* region);
     virtual void endCustomDraw(IggyCustomDrawCallbackRegion* region);
 
+    bool bTrialTimerDisplayed = true;
+
 protected:
     virtual void setTileOrigin(S32 xPos, S32 yPos);
 

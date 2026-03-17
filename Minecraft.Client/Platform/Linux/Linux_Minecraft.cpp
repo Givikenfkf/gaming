@@ -6,6 +6,11 @@
 #include <assert.h>
 #include <mutex>
 // #include <system_service.h>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #if defined(__linux__) && defined(__GLIBC__)
 #include <signal.h>
 #include <execinfo.h>
@@ -657,6 +662,190 @@ void CleanupDevice() {
 }
 #endif
 
+void mainLoop(void* loopArg) {
+    Minecraft* pMinecraft = (Minecraft *)loopArg;
+
+    if (RenderManager.ShouldClose()) {
+        // Graceful shutdown: destroy GL context and GLFW before any C++ dtors run.
+        // Without this, static/global destructors that touch GL objects cause
+        // SIGSEGV.
+        RenderManager.Shutdown();
+#ifdef __EMSCRIPTEN__
+        emscripten_cancel_main_loop();
+#else
+        _exit(0);
+#endif
+    }
+
+    RenderManager.StartFrame();
+    if (pMinecraft->pollResize()) {
+        int fbw, fbh;
+        RenderManager.GetFramebufferSize(fbw, fbh);
+        ui.setScreenSize(fbw, fbh);
+    }
+    app.UpdateTime();
+    PIXBeginNamedEvent(0, "Input manager tick");
+    InputManager.Tick();
+    PIXEndNamedEvent();
+    PIXBeginNamedEvent(0, "Profile manager tick");
+    ProfileManager.Tick();
+    PIXEndNamedEvent();
+    PIXBeginNamedEvent(0, "Storage manager tick");
+    StorageManager.Tick();
+    PIXEndNamedEvent();
+    PIXBeginNamedEvent(0, "Render manager tick");
+    RenderManager.Tick();
+    PIXEndNamedEvent();
+
+    // Tick the social networking manager.
+    PIXBeginNamedEvent(0, "Social network manager tick");
+    //		CSocialManager::Instance()->Tick();
+    PIXEndNamedEvent();
+
+    // Tick sentient.
+    PIXBeginNamedEvent(0, "Sentient tick");
+    MemSect(37);
+    //		SentientManager.Tick();
+    MemSect(0);
+    PIXEndNamedEvent();
+
+    PIXBeginNamedEvent(0, "Network manager do work #1");
+    g_NetworkManager.DoWork();
+    PIXEndNamedEvent();
+    // Render game graphics.
+#if defined(ENABLE_JAVA_GUIS)
+    pMinecraft->run_middle();
+    if (app.GetGameStarted()) {
+#else
+    if (app.GetGameStarted()) {
+        pMinecraft->run_middle();
+#endif
+        app.SetAppPaused(
+            // TODO: proper fix for pausing
+            // 4jcraft: IsLocalGame() doesn't seem to work properly on Iggy
+            // UI, this should work even in multiplayer scenarios though
+            // since it checks for the player count anyway
+            //
+            // g_NetworkManager.IsLocalGame() &&
+            g_NetworkManager.GetPlayerCount() == 1 &&
+            ui.IsPauseMenuDisplayed(ProfileManager.GetPrimaryPad()));
+    } else {
+        MemSect(28);
+        pMinecraft->soundEngine->tick(nullptr, 0.0f);
+        MemSect(0);
+        pMinecraft->textures->tick(true, false);
+        if (app.GetReallyChangingSessionType()) {
+            pMinecraft
+                ->tickAllConnections();  // Added to stop timing out when we
+                                         // are waiting after converting to
+                                         // an offline game
+        }
+    }
+    pMinecraft->soundEngine->playMusicTick();
+
+    static bool bInitnet = false;
+
+    if (bInitnet) {
+        g_NetworkManager.Initialise();
+    }
+
+#if defined(MEMORY_TRACKING)
+    static bool bResetMemTrack = false;
+    static bool bDumpMemTrack = false;
+
+    MemPixStuff();
+
+    if (bResetMemTrack) {
+        ResetMem();
+        MEMORYSTATUS memStat;
+        GlobalMemoryStatus(&memStat);
+        printf("RESETMEM: Avail. phys %d\n",
+               memStat.dwAvailPhys / (1024 * 1024));
+        bResetMemTrack = false;
+    }
+
+    if (bDumpMemTrack) {
+        DumpMem();
+        bDumpMemTrack = false;
+        MEMORYSTATUS memStat;
+        GlobalMemoryStatus(&memStat);
+        printf("DUMPMEM: Avail. phys %d\n",
+               memStat.dwAvailPhys / (1024 * 1024));
+        printf("Renderer used: %d\n", RenderManager.CBuffSize(-1));
+        }
+#endif
+    ui.tick();
+    ui.render();
+
+    // Present the frame.
+    RenderManager.Present();
+
+    ui.CheckMenuDisplayed();
+    PIXBeginNamedEvent(0, "Profile load check");
+    // has the game defined profile data been changed (by a profile load)
+    if (app.uiGameDefinedDataChangedBitmask != 0) {
+        void* pData;
+        for (int i = 0; i < XUSER_MAX_COUNT; i++) {
+            if (app.uiGameDefinedDataChangedBitmask & (1 << i)) {
+                // reset the changed flag
+                app.ClearGameSettingsChangedFlag(i);
+                app.DebugPrintf(
+                    "***  - APPLYING GAME SETTINGS CHANGE for pad %d\n", i);
+                app.ApplyGameSettingsChanged(i);
+
+#if defined(_DEBUG_MENUS_ENABLED)
+                if (app.DebugSettingsOn()) {
+                    app.ActionDebugMask(i);
+                } else {
+                    // force debug mask off
+                    app.ActionDebugMask(i, true);
+                }
+#endif
+                // clear the stats first - there could have beena signout
+                // and sign back in in the menus need to clear the player
+                // stats - can't assume it'll be done in setlevel - we may
+                // not be in the game
+                pMinecraft->stats[i]->clear();
+                pMinecraft->stats[i]->parse(pData);
+            }
+        }
+
+        // clear the flag
+        app.uiGameDefinedDataChangedBitmask = 0;
+    }
+    PIXEndNamedEvent();
+
+    PIXBeginNamedEvent(0, "Network manager do work #2");
+    g_NetworkManager.DoWork();
+    PIXEndNamedEvent();
+
+    // Any threading type things to deal with from the xui side?
+    app.HandleXuiActions();
+
+    // 4J-PB - Update the trial timer display if we are in the trial version
+    if (!ProfileManager.IsFullVersion()) {
+        // display the trial timer
+        if (app.GetGameStarted()) {
+            // 4J-PB - if the game is paused, add the elapsed time to the
+            // trial timer count so it doesn't tick down
+            if (app.IsAppPaused()) {
+                app.UpdateTrialPausedTimer();
+            }
+            ui.UpdateTrialTimer(ProfileManager.GetPrimaryPad());
+        }
+    } else {
+        // need to turn off the trial timer if it was on , and we've
+        // unlocked the full version
+        if (ui.bTrialTimerDisplayed) {
+            ui.ShowTrialTimer(false);
+            ui.bTrialTimerDisplayed = false;
+        }
+    }
+
+    // Fix for #7318 - Title crashes after short soak in the leaderboards
+    // end game loop
+}
+
 int main(int argc, const char* argv[]) {
 #if defined(__linux__) && defined(__GLIBC__)
     struct sigaction sa;
@@ -689,8 +878,6 @@ int main(int argc, const char* argv[]) {
         if (reqW > 0 && reqH > 0) RenderManager.SetWindowSize(reqW, reqH);
         if (fs) RenderManager.SetFullscreen(true);
     }
-
-    static bool bTrialTimerDisplayed = true;
 
 #if defined(MEMORY_TRACKING)
     ResetMem();
@@ -771,180 +958,14 @@ int main(int argc, const char* argv[]) {
     app.InitGameSettings();
 
     app.InitialiseTips();
-    while (!RenderManager.ShouldClose()) {
-        RenderManager.StartFrame();
-        if (pMinecraft->pollResize()) {
-            int fbw, fbh;
-            RenderManager.GetFramebufferSize(fbw, fbh);
-            ui.setScreenSize(fbw, fbh);
-        }
-        app.UpdateTime();
-        PIXBeginNamedEvent(0, "Input manager tick");
-        InputManager.Tick();
-        PIXEndNamedEvent();
-        PIXBeginNamedEvent(0, "Profile manager tick");
-        ProfileManager.Tick();
-        PIXEndNamedEvent();
-        PIXBeginNamedEvent(0, "Storage manager tick");
-        StorageManager.Tick();
-        PIXEndNamedEvent();
-        PIXBeginNamedEvent(0, "Render manager tick");
-        RenderManager.Tick();
-        PIXEndNamedEvent();
 
-        // Tick the social networking manager.
-        PIXBeginNamedEvent(0, "Social network manager tick");
-        //		CSocialManager::Instance()->Tick();
-        PIXEndNamedEvent();
-
-        // Tick sentient.
-        PIXBeginNamedEvent(0, "Sentient tick");
-        MemSect(37);
-        //		SentientManager.Tick();
-        MemSect(0);
-        PIXEndNamedEvent();
-
-        PIXBeginNamedEvent(0, "Network manager do work #1");
-        g_NetworkManager.DoWork();
-        PIXEndNamedEvent();
-        // Render game graphics.
-#if defined(ENABLE_JAVA_GUIS)
-        pMinecraft->run_middle();
-        if (app.GetGameStarted()) {
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop_arg(mainLoop, (void *)pMinecraft, 0, 1);
 #else
-        if (app.GetGameStarted()) {
-            pMinecraft->run_middle();
+    while (true) {
+        mainLoop((void *)pMinecraft);
+    }
 #endif
-            app.SetAppPaused(
-                // TODO: proper fix for pausing
-                // 4jcraft: IsLocalGame() doesn't seem to work properly on Iggy
-                // UI, this should work even in multiplayer scenarios though
-                // since it checks for the player count anyway
-                //
-                // g_NetworkManager.IsLocalGame() &&
-                g_NetworkManager.GetPlayerCount() == 1 &&
-                ui.IsPauseMenuDisplayed(ProfileManager.GetPrimaryPad()));
-        } else {
-            MemSect(28);
-            pMinecraft->soundEngine->tick(nullptr, 0.0f);
-            MemSect(0);
-            pMinecraft->textures->tick(true, false);
-            if (app.GetReallyChangingSessionType()) {
-                pMinecraft
-                    ->tickAllConnections();  // Added to stop timing out when we
-                                             // are waiting after converting to
-                                             // an offline game
-            }
-        }
-        pMinecraft->soundEngine->playMusicTick();
-
-        static bool bInitnet = false;
-
-        if (bInitnet) {
-            g_NetworkManager.Initialise();
-        }
-
-#if defined(MEMORY_TRACKING)
-        static bool bResetMemTrack = false;
-        static bool bDumpMemTrack = false;
-
-        MemPixStuff();
-
-        if (bResetMemTrack) {
-            ResetMem();
-            MEMORYSTATUS memStat;
-            GlobalMemoryStatus(&memStat);
-            printf("RESETMEM: Avail. phys %d\n",
-                   memStat.dwAvailPhys / (1024 * 1024));
-            bResetMemTrack = false;
-        }
-
-        if (bDumpMemTrack) {
-            DumpMem();
-            bDumpMemTrack = false;
-            MEMORYSTATUS memStat;
-            GlobalMemoryStatus(&memStat);
-            printf("DUMPMEM: Avail. phys %d\n",
-                   memStat.dwAvailPhys / (1024 * 1024));
-            printf("Renderer used: %d\n", RenderManager.CBuffSize(-1));
-        }
-#endif
-        ui.tick();
-        ui.render();
-
-        // Present the frame.
-        RenderManager.Present();
-
-        ui.CheckMenuDisplayed();
-        PIXBeginNamedEvent(0, "Profile load check");
-        // has the game defined profile data been changed (by a profile load)
-        if (app.uiGameDefinedDataChangedBitmask != 0) {
-            void* pData;
-            for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-                if (app.uiGameDefinedDataChangedBitmask & (1 << i)) {
-                    // reset the changed flag
-                    app.ClearGameSettingsChangedFlag(i);
-                    app.DebugPrintf(
-                        "***  - APPLYING GAME SETTINGS CHANGE for pad %d\n", i);
-                    app.ApplyGameSettingsChanged(i);
-
-#if defined(_DEBUG_MENUS_ENABLED)
-                    if (app.DebugSettingsOn()) {
-                        app.ActionDebugMask(i);
-                    } else {
-                        // force debug mask off
-                        app.ActionDebugMask(i, true);
-                    }
-#endif
-                    // clear the stats first - there could have beena signout
-                    // and sign back in in the menus need to clear the player
-                    // stats - can't assume it'll be done in setlevel - we may
-                    // not be in the game
-                    pMinecraft->stats[i]->clear();
-                    pMinecraft->stats[i]->parse(pData);
-                }
-            }
-
-            // clear the flag
-            app.uiGameDefinedDataChangedBitmask = 0;
-        }
-        PIXEndNamedEvent();
-
-        PIXBeginNamedEvent(0, "Network manager do work #2");
-        g_NetworkManager.DoWork();
-        PIXEndNamedEvent();
-
-        // Any threading type things to deal with from the xui side?
-        app.HandleXuiActions();
-
-        // 4J-PB - Update the trial timer display if we are in the trial version
-        if (!ProfileManager.IsFullVersion()) {
-            // display the trial timer
-            if (app.GetGameStarted()) {
-                // 4J-PB - if the game is paused, add the elapsed time to the
-                // trial timer count so it doesn't tick down
-                if (app.IsAppPaused()) {
-                    app.UpdateTrialPausedTimer();
-                }
-                ui.UpdateTrialTimer(ProfileManager.GetPrimaryPad());
-            }
-        } else {
-            // need to turn off the trial timer if it was on , and we've
-            // unlocked the full version
-            if (bTrialTimerDisplayed) {
-                ui.ShowTrialTimer(false);
-                bTrialTimerDisplayed = false;
-            }
-        }
-
-        // Fix for #7318 - Title crashes after short soak in the leaderboards
-    }  // end game loop
-
-    // Graceful shutdown: destroy GL context and GLFW before any C++ dtors run.
-    // Without this, static/global destructors that touch GL objects cause
-    // SIGSEGV.
-    RenderManager.Shutdown();
-    _exit(0);
 }  // end main
 
 // Free resources, unregister custom classes, and exit.
