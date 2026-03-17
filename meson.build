@@ -31,6 +31,7 @@ if is_emscripten
     gl4es_opt = cmake.subproject_options()
     gl4es_opt.add_cmake_defines({'STATICLIB': true, 'NOX11': true, 'NOEGL': true})
     gl4es_opt.set_override_option('unity', 'off')
+    gl4es_opt.append_compile_args('c', '-pthread')
 
     gl4es_proj = cmake.subproject('gl4es', options: gl4es_opt)
     gl_dep = gl4es_proj.dependency('GL')
@@ -62,12 +63,12 @@ global_cpp_defs = [
 
 if is_emscripten
   common_args = [
+    '-pthread',
     '--use-port=zlib',
     '--use-port=sdl2',
   ]
 
   add_project_arguments(
-    '-pthread',
     common_args,
     language: 'cpp'
   )
