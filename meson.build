@@ -34,6 +34,7 @@ endif
 
 if host_machine.system() == 'emscripten'
   common_args = [
+    '-sMEMORY64=1',
     '-pthread',
     '--use-port=zlib',
     '--use-port=sdl2',
@@ -41,7 +42,7 @@ if host_machine.system() == 'emscripten'
 
   add_project_arguments(
     common_args,
-    language: 'cpp'
+    language: ['c', 'cpp']
   )
 
   add_project_link_arguments(
