@@ -58,12 +58,12 @@ C4JThread* GameRenderer::m_updateThread;
 C4JThread::EventArray* GameRenderer::m_updateEvents;
 bool GameRenderer::nearThingsToDo = false;
 bool GameRenderer::updateRunning = false;
+#endif
 std::vector<std::uint8_t*> GameRenderer::m_deleteStackByte;
 std::vector<SparseLightStorage*> GameRenderer::m_deleteStackSparseLightStorage;
 std::vector<CompressedTileStorage*>
     GameRenderer::m_deleteStackCompressedTileStorage;
 std::vector<SparseDataStorage*> GameRenderer::m_deleteStackSparseDataStorage;
-#endif
 CRITICAL_SECTION GameRenderer::m_csDeleteStack;
 
 GameRenderer::GameRenderer(Minecraft* mc) {
@@ -164,8 +164,10 @@ GameRenderer::GameRenderer(Minecraft* mc) {
     m_updateEvents = new C4JThread::EventArray(
         eUpdateEventCount, C4JThread::EventArray::e_modeAutoClear);
     m_updateEvents->Set(eUpdateEventIsFinished);
+#endif
 
     InitializeCriticalSection(&m_csDeleteStack);
+#ifdef MULTITHREAD_ENABLE
     m_updateThread = new C4JThread(runUpdate, NULL, "Chunk update");
 #ifdef __PS3__
     m_updateThread->SetPriority(THREAD_PRIORITY_ABOVE_NORMAL);
@@ -1107,7 +1109,6 @@ void GameRenderer::render(float a, bool bFirst) {
 }
 void GameRenderer::renderLevel(float a) { renderLevel(a, 0); }
 
-#ifdef MULTITHREAD_ENABLE
 // Request that an item be deleted, when it is safe to do so
 void GameRenderer::AddForDelete(std::uint8_t* deleteThis) {
     EnterCriticalSection(&m_csDeleteStack);
@@ -1133,6 +1134,7 @@ void GameRenderer::FinishedReassigning() {
     LeaveCriticalSection(&m_csDeleteStack);
 }
 
+#ifdef MULTITHREAD_ENABLE
 int GameRenderer::runUpdate(void* lpParam) {
     Minecraft* minecraft = Minecraft::GetInstance();
     Vec3::CreateNewThreadStorage();
@@ -1359,6 +1361,30 @@ void GameRenderer::renderLevel(float a, __int64 until) {
                 if (diff > 1000000000) break;
             } while (true);
             PIXEndNamedEvent();
+
+            // We've got stacks for things that can only safely be deleted whilst
+            // this thread isn't updating things - delete those things now
+            EnterCriticalSection(&m_csDeleteStack);
+            for (unsigned int i = 0; i < m_deleteStackByte.size(); i++) {
+                delete m_deleteStackByte[i];
+            }
+            m_deleteStackByte.clear();
+            for (unsigned int i = 0; i < m_deleteStackSparseLightStorage.size();
+                i++) {
+                delete m_deleteStackSparseLightStorage[i];
+            }
+            m_deleteStackSparseLightStorage.clear();
+            for (unsigned int i = 0; i < m_deleteStackCompressedTileStorage.size();
+                i++) {
+                delete m_deleteStackCompressedTileStorage[i];
+            }
+            m_deleteStackCompressedTileStorage.clear();
+            for (unsigned int i = 0; i < m_deleteStackSparseDataStorage.size();
+                i++) {
+                delete m_deleteStackSparseDataStorage[i];
+            }
+            m_deleteStackSparseDataStorage.clear();
+            LeaveCriticalSection(&m_csDeleteStack);
         }
 #endif
         setupFog(0, a);
