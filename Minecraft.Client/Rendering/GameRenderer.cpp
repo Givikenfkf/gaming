@@ -60,12 +60,12 @@ C4JThread* GameRenderer::m_updateThread;
 C4JThread::EventArray* GameRenderer::m_updateEvents;
 bool GameRenderer::nearThingsToDo = false;
 bool GameRenderer::updateRunning = false;
+#endif
 std::vector<uint8_t*> GameRenderer::m_deleteStackByte;
 std::vector<SparseLightStorage*> GameRenderer::m_deleteStackSparseLightStorage;
 std::vector<CompressedTileStorage*>
     GameRenderer::m_deleteStackCompressedTileStorage;
 std::vector<SparseDataStorage*> GameRenderer::m_deleteStackSparseDataStorage;
-#endif
 std::mutex GameRenderer::m_csDeleteStack;
 
 ResourceLocation GameRenderer::RAIN_LOCATION =
@@ -1040,7 +1040,6 @@ void GameRenderer::render(float a, bool bFirst) {
 
 void GameRenderer::renderLevel(float a) { renderLevel(a, 0); }
 
-#if defined(MULTITHREAD_ENABLE)
 // Request that an item be deleted, when it is safe to do so
 void GameRenderer::AddForDelete(uint8_t* deleteThis) {
     m_csDeleteStack.lock();
@@ -1064,6 +1063,7 @@ void GameRenderer::AddForDelete(SparseDataStorage* deleteThis) {
 
 void GameRenderer::FinishedReassigning() { m_csDeleteStack.unlock(); }
 
+#ifdef MULTITHREAD_ENABLE
 int GameRenderer::runUpdate(void* lpParam) {
     Minecraft* minecraft = Minecraft::GetInstance();
     Tesselator::CreateNewThreadStorage(1024 * 1024);
@@ -1286,6 +1286,29 @@ void GameRenderer::renderLevel(float a, int64_t until) {
                 if (diff > 1000000000) break;
             } while (true);
             PIXEndNamedEvent();
+
+            // We've got stacks for things that can only safely be deleted whilst
+            // this thread isn't updating things - delete those things now
+            std::lock_guard<std::mutex> lock(m_csDeleteStack);
+            for (unsigned int i = 0; i < m_deleteStackByte.size(); i++) {
+                delete m_deleteStackByte[i];
+            }
+            m_deleteStackByte.clear();
+            for (unsigned int i = 0; i < m_deleteStackSparseLightStorage.size();
+                i++) {
+                delete m_deleteStackSparseLightStorage[i];
+            }
+            m_deleteStackSparseLightStorage.clear();
+            for (unsigned int i = 0; i < m_deleteStackCompressedTileStorage.size();
+                i++) {
+                delete m_deleteStackCompressedTileStorage[i];
+            }
+            m_deleteStackCompressedTileStorage.clear();
+            for (unsigned int i = 0; i < m_deleteStackSparseDataStorage.size();
+                i++) {
+                delete m_deleteStackSparseDataStorage[i];
+            }
+            m_deleteStackSparseDataStorage.clear();
         }
 #endif
 
