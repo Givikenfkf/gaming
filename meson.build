@@ -22,12 +22,15 @@ use_gles = get_option('renderer') == 'gles'
 
 global_cpp_defs = [
   '-DSPLIT_SAVES',
-  '-D_LARGE_WORLDS',
   '-D_EXTENDED_ACHIEVEMENTS',
   '-D_DEBUG_MENUS_ENABLED',
   '-D_DEBUG',
   '-DDEBUG',
 ]
+
+if host_machine.system() != 'emscripten'
+  global_cpp_defs += '-D_LARGE_WORLDS'
+endif
 
 if host_machine.system() == 'emscripten'
   common_args = [
