@@ -1122,6 +1122,7 @@ return -1;
 
     Minecraft::main();
 
+#ifndef __EMSCRIPTEN__
     // Minecraft::main () used to call Minecraft::Start, but this takes ~2.5
     // seconds, so now running this in another thread so we can do some basic
     // renderer calls whilst it is happening. This is at attempt to stop getting
@@ -1141,6 +1142,7 @@ return -1;
     // context to the init thread for texture loading; we must reclaim it here
     // before any further OpenGL calls in the main render loop.
     RenderManager.InitialiseContext();
+#endif
 
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
