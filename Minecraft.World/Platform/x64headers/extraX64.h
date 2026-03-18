@@ -10,7 +10,9 @@
 
 #include <vector>
 
+#ifndef __EMSCRIPTEN__
 #define MULTITHREAD_ENABLE
+#endif
 
 typedef unsigned char byte;
 const int XUSER_INDEX_ANY = 255;
