@@ -12,7 +12,9 @@
 
 #include <vector>
 
+#ifndef __EMSCRIPTEN__
 #define MULTITHREAD_ENABLE
+#endif
 
 constexpr int MINECRAFT_NET_MAX_PLAYERS = 8;
 

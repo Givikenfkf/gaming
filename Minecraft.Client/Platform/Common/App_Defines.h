@@ -2,7 +2,6 @@
 
 // 4J Stu - For non-splitscreen menus, default to this screen
 #define DEFAULT_XUI_MENU_USER 0
-#define MULTITHREAD_ENABLE
 #define MAX_CAPENAME_SIZE 32
 #define MAX_BANNERNAME_SIZE 32
 #define MAX_TMSFILENAME_SIZE 40
@@ -10,6 +9,10 @@
 #define MAX_EXTENSION_TYPES 3
 
 #define MAX_LOCAL_PLAYERS 4
+
+#ifndef __EMSCRIPTEN__
+#define MULTITHREAD_ENABLE
+#endif
 
 // 4J Stu - Required for sentient reporting of whether the volume level has been
 // changed or not
