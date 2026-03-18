@@ -1275,7 +1275,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
                 PIXBeginNamedEvent(0, "Updating dirty chunks pass %d",
                                    PIXPass++);
                 bool retval =
-                    mc->levelRenderer->updateDirtyChunks(cameraEntity, false);
+                    mc->levelRenderer->updateDirtyChunks();
                 PIXEndNamedEvent();
                 if (retval) break;
 
