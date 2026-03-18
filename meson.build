@@ -82,7 +82,6 @@ if is_emscripten
     '-sFULL_ES2=1',
     '-sALLOW_MEMORY_GROWTH=1',
     '-sPTHREAD_POOL_SIZE=4',
-    '-sERROR_ON_UNDEFINED_SYMBOLS=0',
     '-sASSERTIONS=0',
     '-sFORCE_FILESYSTEM=1',
     '-g',
