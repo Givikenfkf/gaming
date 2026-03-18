@@ -173,6 +173,7 @@ void C4JRender::Initialise() {
     s_mainThreadSet = true;
     pthread_setspecific(s_glCtxKey, (void*)s_window);
 
+#ifndef __EMSCRIPTEN__
     // Pre-create shared GL contexts for worker threads (chunk builders etc.)
     // Ensure they are invisible so they don't interfere with the window
     // manager.
@@ -197,6 +198,7 @@ void C4JRender::Initialise() {
         s_sharedContexts[s_sharedContextCount] = ctx;
         s_sharedContextCount++;
     }
+#endif
 
     // Ensure main thread still has the context
     SDL_GL_MakeCurrent(s_window, s_glContext);
