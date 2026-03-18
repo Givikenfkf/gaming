@@ -482,6 +482,8 @@ void C4JRender::Initialise() {
     s_mainThreadSet = true;
     pthread_setspecific(s_glCtxKey, (void*)s_window);
     SDL_GL_MakeCurrent(s_window, s_glContext);
+
+#ifndef __EMSCRIPTEN__
     for (int i = 0; i < MAX_SHARED_CTXS; i++) {
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         SDL_Window* w = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED,
@@ -498,6 +500,8 @@ void C4JRender::Initialise() {
         s_sharedCtxCount++;
     }
     SDL_GL_MakeCurrent(s_window, s_glContext);
+#endif
+
     pushRenderState();
 
 #ifdef ENABLE_VSYNC
