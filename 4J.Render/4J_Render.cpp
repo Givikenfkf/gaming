@@ -344,7 +344,9 @@ void C4JRender::Present() {
     }
     // Present the rendered frame after processing input/events to avoid input
     // timing issues
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
     // debug log to help diagnose mouse issues
     // printf("[4J_Render] Presenting frame (mouse lock=%d)\n", s_mouseLocked);
     // fflush(stdout);
@@ -558,7 +560,9 @@ void C4JRender::DrawVertices(ePrimitiveType PrimitiveType, int count,
         }
         ::glEnd();
     }
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
 
     pthread_mutex_unlock(&s_glCallMutex);
 }
@@ -567,21 +571,27 @@ void C4JRender::CBuffLockStaticCreations() {}
 
 int C4JRender::CBuffCreate(int count) {
     int id = (int)::glGenLists(count);
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
     return id;
 }
 
 void C4JRender::CBuffDelete(int first, int count) {
     if (first > 0 && count > 0) {
         ::glDeleteLists(first, count);
+#ifndef __EMSCRIPTEN__
         ::glFlush();
+#endif
     }
 }
 
 void C4JRender::CBuffStart(int index, bool /*full*/) {
     if (index > 0) {
         ::glNewList(index, GL_COMPILE);
+#ifndef __EMSCRIPTEN__
         ::glFlush();
+#endif
     }
 }
 
@@ -589,7 +599,9 @@ void C4JRender::CBuffClear(int index) {
     if (index > 0) {
         ::glNewList(index, GL_COMPILE);
         ::glEndList();
+#ifndef __EMSCRIPTEN__
         ::glFlush();
+#endif
     }
 }
 
@@ -597,7 +609,9 @@ int C4JRender::CBuffSize(int /*index*/) { return 0; }
 
 void C4JRender::CBuffEnd() {
     ::glEndList();
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
 }
 
 bool C4JRender::CBuffCall(int index, bool /*full*/) {
@@ -659,7 +673,9 @@ void C4JRender::TextureBindVertex(int idx, bool scaleLight) {
     }
 
     ::glActiveTexture(GL_TEXTURE0);
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
 }
 
 void C4JRender::TextureSetTextureLevels(int levels) {
@@ -676,7 +692,9 @@ void C4JRender::TextureData(int width, int height, void* data, int level,
     ::glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, width, height, 0, GL_RGBA,
                    GL_UNSIGNED_BYTE, data);
 
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
 
     if (level == 0) {
         ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -689,7 +707,9 @@ void C4JRender::TextureDataUpdate(int xoffset, int yoffset, int width,
                                   int height, void* data, int level) {
     ::glTexSubImage2D(GL_TEXTURE_2D, level, xoffset, yoffset, width, height,
                       GL_RGBA, GL_UNSIGNED_BYTE, data);
+#ifndef __EMSCRIPTEN__
     ::glFlush();
+#endif
 }
 
 void C4JRender::TextureSetParam(int param, int value) {
