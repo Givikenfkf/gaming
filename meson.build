@@ -13,6 +13,12 @@ project(
   ],
 )
 
+if get_option('assets_mode')
+  full_build = false
+else
+  full_build = true
+endif
+
 pymod = import('python')
 python = pymod.find_installation('python3', required: true)
 
@@ -46,29 +52,37 @@ global_cpp_args = [
 ]
 add_project_arguments(global_cpp_args, language: 'cpp')
 
-sdl2_dep = dependency('sdl2')
-thread_dep = dependency('threads')
-dl_dep = cc.find_library('dl', required: true)
+sdl2_dep = dependency('sdl2', required: full_build)
+thread_dep = dependency('threads', required: full_build)
+
+if full_build
+  dl_dep = cc.find_library('dl', required: true)
+endif
 
 # GLES vs Desktop GL
 if use_gles
-  gl_dep = dependency('glesv2', required: true)
+  gl_dep = dependency('glesv2', required: full_build)
   glu_dep = dependency('', required: false)
 else
-  gl_dep = dependency('gl', required: true)
-  glu_dep = dependency('glu', required: true)
+  gl_dep = dependency('gl', required: full_build)
+  glu_dep = dependency('glu', required: full_build)
 endif
 
 stb = subproject('stb').get_variable('stb_inc')
 stb_dep = declare_dependency(include_directories: stb)
 
-miniaudio_dep = dependency('miniaudio')
+miniaudio_dep = dependency('miniaudio', required: full_build)
 
-subdir('4J.Render')
-subdir('4J.Input')
-subdir('4J.Profile')
-subdir('4J.Storage')
+if full_build
+  subdir('4J.Render')
+  subdir('4J.Input')
+  subdir('4J.Profile')
+  subdir('4J.Storage')
+endif
 
 subdir('Minecraft.Assets')
-subdir('Minecraft.World')
-subdir('Minecraft.Client')
+
+if full_build
+  subdir('Minecraft.World')
+  subdir('Minecraft.Client')
+endif
