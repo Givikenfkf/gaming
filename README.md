@@ -131,7 +131,7 @@ meson setup build
 
 ## Running
 
-In order to run the compiled binary, you have a compiled copy of the game's assets in your current working directory. These assets are automatically copied to the `Minecraft.Client` folder in your build directory. To run the game, your current working directory must be in this folder.
+In order to run the compiled binary, you have a compiled copy of the game's assets in your current working directory (or you can use the [prebuilt assets](https://github.com/4jcraft/4jcraft/releases/tag/latest-assets)). These assets are automatically copied to the `Minecraft.Client` folder in your build directory. To run the game, your current working directory must be in this folder.
 
 ```sh
 cd build/Minecraft.Client
