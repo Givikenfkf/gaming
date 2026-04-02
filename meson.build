@@ -41,6 +41,7 @@ if host_machine.system() == 'emscripten'
   ]
 
   add_project_arguments(
+    '-DMA_NO_ALSA',
     common_args,
     language: ['c', 'cpp']
   )
