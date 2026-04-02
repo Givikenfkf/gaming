@@ -14,13 +14,6 @@ extern "C" {
 extern void glClearDepthf(float depth);
 void glClearDepth(double depth) { glClearDepthf((float)depth); }
 void glTexGeni(unsigned int, unsigned int, int) {}
-void glTexGenfv(unsigned int, unsigned int, const float*) {}
-void glTexCoordPointer(int, unsigned int, int, const void*) {}
-void glNormalPointer(unsigned int, int, const void*) {}
-void glColorPointer(int, unsigned int, int, const void*) {}
-void glVertexPointer(int, unsigned int, int, const void*) {}
-void glEndList(void) {}
-void glCallLists(int, unsigned int, const void*) {}
 }
 #endif
 
