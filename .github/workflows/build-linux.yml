@@ -43,6 +43,11 @@ jobs:
           key: ${{ runner.os }}-ccache-${{ hashFiles('**/meson.build') }}
           restore-keys: ${{ runner.os }}-ccache-
 
+      - name: Limit ccache size
+        env:
+          CCACHE_DIR: ${{ runner.temp }}/ccache
+        run: ccache -M 50M
+
       - name: Configure Meson
         env:
           CC: "ccache clang"
