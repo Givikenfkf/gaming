@@ -40,13 +40,13 @@ if host_machine.system() == 'emscripten'
     '--use-port=sdl2',
   ]
 
-  add_project_arguments(
+  add_global_arguments(
     '-DMA_NO_ALSA',
     common_args,
     language: ['c', 'cpp']
   )
 
-  add_project_link_arguments(
+  add_global_link_arguments(
     '-sFULL_ES3=1',
     '-sALLOW_MEMORY_GROWTH=1',
     '-sPTHREAD_POOL_SIZE=4',
@@ -55,7 +55,7 @@ if host_machine.system() == 'emscripten'
     '-sFORCE_FILESYSTEM=1',
     '-g',
     common_args,
-    language: 'cpp'
+    language: ['c', 'cpp']
   )
 endif
 
