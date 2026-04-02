@@ -17,13 +17,16 @@
 #include <Windows.h>
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__)
 #include <pthread.h>
 #include <sched.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+#elif defined(__EMSCRIPTEN__)
+#include <pthread.h>
+#include <emscripten/threading.h>
 #endif
 
 #include "../../Minecraft.Client/Platform/Common/ShutdownManager.h"
@@ -76,7 +79,7 @@ bool isProcessorIndexPlausible(int proc) {
 }
 
 std::int64_t getNativeThreadId() {
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__EMSCRIPTEN__)
     return static_cast<std::int64_t>(::syscall(SYS_gettid));
 #else
     return 0;
@@ -124,17 +127,19 @@ void setThreadNamePlatform([[maybe_unused]] std::uint32_t threadId,
     } __except (EXCEPTION_EXECUTE_HANDLER) {
     }
 
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__EMSCRIPTEN__)
     // pthread_setname_np limit: 16 chars including null terminator.
     char truncated[16];
     std::snprintf(truncated, sizeof(truncated), "%s", name);
     (void)::pthread_setname_np(::pthread_self(), truncated);
+#elif defined(__EMSCRIPTEN__)
+    ::emscripten_set_thread_name(::pthread_self(), name);
 #endif
 }
 
 #if defined(_WIN32)
 thread_local std::vector<DWORD_PTR> g_affinityMaskStack;
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__EMSCRIPTEN__)
 thread_local std::vector<cpu_set_t> g_affinityMaskStack;
 #endif
 
@@ -164,7 +169,7 @@ void setAffinityPlatform(std::thread& threadHandle, bool isSelf, int proc) {
     }
     (void)::SetThreadAffinityMask(handle, mask);
 
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__EMSCRIPTEN__)
     pthread_t handle;
     if (threadHandle.joinable())
         handle = threadHandle.native_handle();
@@ -202,7 +207,7 @@ void setPriorityPlatform(std::thread& threadHandle, bool isSelf,
         return;
     (void)::SetThreadPriority(handle, std::to_underlying(priority));
 
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__EMSCRIPTEN__)
     std::int64_t tid = 0;
     if (isSelf) {
         tid = getNativeThreadId();
@@ -662,7 +667,7 @@ void C4JThread::pushAffinityAllCores() {
         ::SetThreadAffinityMask(::GetCurrentThread(), processMask);
     if (prev != 0) g_affinityMaskStack.push_back(prev);
 
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__EMSCRIPTEN__)
     cpu_set_t prev;
     if (::pthread_getaffinity_np(::pthread_self(), sizeof(prev), &prev) != 0)
         return;
@@ -684,7 +689,7 @@ void C4JThread::popAffinity() {
     g_affinityMaskStack.pop_back();
     (void)::SetThreadAffinityMask(::GetCurrentThread(), prev);
 
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__EMSCRIPTEN__)
     if (g_affinityMaskStack.empty()) return;
     const cpu_set_t prev = g_affinityMaskStack.back();
     g_affinityMaskStack.pop_back();
