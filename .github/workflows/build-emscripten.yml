@@ -1,67 +1,81 @@
 name: Build (Emscripten 64-bit)
 
 on:
-  push:
-    paths: &workflow_paths
-      - '**.cpp'
-      - '**.h'
-      - '**.c'
-      - '**.cc'
-      - '**.cxx'
-      - '**.hh'
-      - '**.hpp'
-      - '**.hxx'
-      - '**.inl'
-      - '**.frag'
-      - '**.vert'
-      - '**meson.build'
-      - 'subprojects/*.wrap'
-      - '.github/workflows/build-emscripten.yml'
+push:
+paths: &workflow_paths
+- '**.cpp'
+- '**.h'
+- '**.c'
+- '**.cc'
+- '**.cxx'
+- '**.hh'
+- '**.hpp'
+- '**.hxx'
+- '**.inl'
+- '**.frag'
+- '**.vert'
+- '**meson.build'
+- 'subprojects/*.wrap'
+- '.github/workflows/build-emscripten.yml'
 
-  pull_request:
-    paths: *workflow_paths
+pull_request:
+paths: *workflow_paths
 
-  workflow_dispatch:
+workflow_dispatch:
 
 jobs:
-  build-emscripten:
-    runs-on: ubuntu-latest
-    container:
-      image: emscripten/emsdk:latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+build-emscripten:
+runs-on: ubuntu-latest
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ccache ninja-build python3-pip
-          python3 -m pip install meson --break-system-packages
+```
+container:
+  image: emscripten/emsdk:latest
 
-      - name: Restore ccache
-        uses: actions/cache@v5
-        with:
-          path: ${{ runner.temp }}/ccache
-          key: Emscripten-ccache-${{ hashFiles('**/meson.build') }}
-          restore-keys: Emscripten-ccache-
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Configure Meson
-        run: |
-          meson setup build_emscripten -D ui_backend=java -D renderer=gles --cross-file=./scripts/emscripten_native.txt
+  - name: Install system dependencies
+    run: |
+      apt-get update
+      apt-get install -y ccache ninja-build python3-pip
+      python3 -m pip install meson --break-system-packages
 
-      - name: Build with Meson
-        env:
-          CCACHE_DIR: ${{ runner.temp }}/ccache
-        run: |
-          # Use all available cores for faster parallel builds
-          meson compile -C build_emscripten -j $(nproc) -v Minecraft.Client.html
+  - name: Restore ccache
+    uses: actions/cache@v4
+    with:
+      path: ${{ runner.temp }}/ccache
+      key: Emscripten-ccache-${{ hashFiles('**/meson.build') }}
+      restore-keys: |
+        Emscripten-ccache-
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: minecraft-client-emscripten-debug_exe-${{ github.sha }}
-          path: |
-            build_emscripten/Minecraft.Client/Minecraft.Client.html
-            build_emscripten/Minecraft.Client/Minecraft.Client.js
-            build_emscripten/Minecraft.Client/Minecraft.Client.wasm
-          retention-days: 7
+  - name: Configure Meson
+    run: |
+      meson setup build_emscripten \
+        -D ui_backend=java \
+        -D renderer=gles \
+        --cross-file=./scripts/emscripten_native.txt
+
+  - name: Build with Meson
+    env:
+      CCACHE_DIR: ${{ runner.temp }}/ccache
+    run: |
+      meson compile -C build_emscripten -j $(nproc) -v Minecraft.Client.html
+
+  - name: Show generated files
+    run: |
+      echo "==== Minecraft.Client output ===="
+      find build_emscripten/Minecraft.Client -type f | sort
+
+  - name: Verify output exists
+    run: |
+      test -d build_emscripten/Minecraft.Client
+
+  - name: Upload artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: minecraft-client-emscripten-debug_exe-${{ github.sha }}
+      path: build_emscripten/Minecraft.Client/**
+      retention-days: 7
+      if-no-files-found: error
+```
