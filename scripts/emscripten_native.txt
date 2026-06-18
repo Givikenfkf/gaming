@@ -6,10 +6,20 @@ strip = 'emstrip'
 
 [built-in options]
 c_args = []
-c_link_args = []
+cpp_args = []
+c_link_args = [
+  '--preload-file', 'Common@/Common',
+  '--preload-file', 'Sound@/Sound',
+  '--preload-file', 'music@/music',
+]
+cpp_link_args = [
+  '--preload-file', 'Common@/Common',
+  '--preload-file', 'Sound@/Sound',
+  '--preload-file', 'music@/music',
+]
 
 [host_machine]
 system = 'emscripten'
-cpu_family = 'wasm64'
-cpu = 'wasm64'
+cpu_family = 'wasm32'
+cpu = 'wasm32'
 endian = 'little'
