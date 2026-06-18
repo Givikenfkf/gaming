@@ -27,7 +27,7 @@ jobs:
 build-emscripten:
 runs-on: ubuntu-latest
 
-```
+
 container:
   image: emscripten/emsdk:latest
 
@@ -78,4 +78,3 @@ steps:
       path: build_emscripten/Minecraft.Client/**
       retention-days: 7
       if-no-files-found: error
-```
